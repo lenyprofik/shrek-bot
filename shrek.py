@@ -32,7 +32,7 @@ tree = bot.tree
 
 # Normální Shrek hlášky
 shrek_quotes = [
-    "🧅 Zlobř jsou jako cibule!",
+    "🧅 Ogres jsou jako cibule!",
     "🏞️ Tohle je moje bažina!",
     "😡 Co děláš v mojí bažině?!",
     "🐴 Osle, drž zobák!",
@@ -115,12 +115,12 @@ role_replies = {
     ]
 }
 
-# Cooldown
+# Cooldowny
 last_role_reply = 0
-ROLE_COOLDOWN = 20
+ROLE_COOLDOWN = 10
 
 last_auto_ai = 0
-AUTO_AI_COOLDOWN = 2
+AUTO_AI_COOLDOWN = 5
 
 # ====== READY ======
 @bot.event
@@ -195,29 +195,32 @@ async def on_message(message):
     if message.author == bot.user:
         return
 
-    # Role reakce
     now = time.time()
+
+    # 1) ROLE REAKCE (pokud proběhne → konec)
     if now - last_role_reply > ROLE_COOLDOWN:
         for role in message.author.roles:
             if role.name in role_replies:
                 await message.channel.send(random.choice(role_replies[role.name]))
                 last_role_reply = now
-                break
+                return
 
-    # Auto AI odpovědi
+    # 2) AUTO AI ODPOVĚĎ (pokud proběhne → konec)
     if now - last_auto_ai > AUTO_AI_COOLDOWN:
         msg = message.content.lower()
 
-        for key in ["ahoj", "jak", "proč", "lol", "ne"]:
-            if key in msg:
-                await message.channel.send(random.choice(ai_answers))
-                last_auto_ai = now
-                break
+        triggers = ["ahoj", "jak", "proč", "lol", "ne"]
+        if any(t in msg for t in triggers):
+            await message.channel.send(random.choice(ai_answers))
+            last_auto_ai = now
+            return
 
         if "shrek" in msg:
             await message.channel.send("🧅 Někdo mě volal z bažiny?")
             last_auto_ai = now
+            return
 
+    # 3) Zpracování příkazů
     await bot.process_commands(message)
 
 # ====== START ======
