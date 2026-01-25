@@ -215,45 +215,101 @@ async def on_ready():
     # 3) Informace do konzole
     print(f"Bot je online jako {bot.user}")
 # ====== SLASH COMMANDS ======
+
 @tree.command(name="shrek", description="Shrek řekne náhodnou hlášku")
 async def shrek(interaction: discord.Interaction):
+    # XP za slash command
+    user = await get_user(interaction.user.id)
+    await add_xp(interaction.user.id, 1)
+    user = await get_user(interaction.user.id)
+    await check_level_up(user, interaction)
+
     await interaction.response.send_message(random.choice(shrek_quotes))
+
 
 @tree.command(name="swamp", description="Vstup do Shrekovy bažiny")
 async def swamp(interaction: discord.Interaction):
+    # XP za slash command
+    user = await get_user(interaction.user.id)
+    await add_xp(interaction.user.id, 1)
+    user = await get_user(interaction.user.id)
+    await check_level_up(user, interaction)
+
     await interaction.response.send_message("🏞️ Vítej v Shrekově bažině!")
     await interaction.followup.send(random.choice(swamp_events))
 
+
 @tree.command(name="osel", description="Osel něco řekne")
 async def osel(interaction: discord.Interaction):
+    # XP za slash command
+    user = await get_user(interaction.user.id)
+    await add_xp(interaction.user.id, 1)
+    user = await get_user(interaction.user.id)
+    await check_level_up(user, interaction)
+
     await interaction.response.send_message("🐴 Já jsem Osel! A jsem otravnej a hrdý na to!")
+
 
 @tree.command(name="cibule", description="Zjisti, kolik vrstev má cibule")
 async def cibule(interaction: discord.Interaction):
+    # XP za slash command
+    user = await get_user(interaction.user.id)
+    await add_xp(interaction.user.id, 1)
+    user = await get_user(interaction.user.id)
+    await check_level_up(user, interaction)
+
     vrstvy = random.randint(2, 10)
     await interaction.response.send_message(f"🧅 Tahle cibule má **{vrstvy} vrstev**. Jako ty.")
 
+
 @tree.command(name="nadavka", description="Shrek někoho urazí")
 async def nadavka(interaction: discord.Interaction, member: Optional[discord.Member] = None):
+    # XP za slash command
+    user = await get_user(interaction.user.id)
+    await add_xp(interaction.user.id, 1)
+    user = await get_user(interaction.user.id)
+    await check_level_up(user, interaction)
+
     if member:
         await interaction.response.send_message(f"😈 {member.mention}, Shrek říká: {random.choice(roasts)}")
     else:
         await interaction.response.send_message("😈 Koho mám urazit, ty cibulo?")
 
+
 @tree.command(name="roast", description="Shrek někoho roastne")
 async def roast(interaction: discord.Interaction, member: Optional[discord.Member] = None):
+    # XP za slash command
+    user = await get_user(interaction.user.id)
+    await add_xp(interaction.user.id, 1)
+    user = await get_user(interaction.user.id)
+    await check_level_up(user, interaction)
+
     if member:
         await interaction.response.send_message(f"🔥 {member.mention} {random.choice(roasts)}")
     else:
         await interaction.response.send_message("🔥 Koho mám hodit do bahna?")
 
+
 @tree.command(name="ai", description="Shrek ti odpoví jako AI")
 async def ai(interaction: discord.Interaction, text: str):
+    # XP za slash command
+    user = await get_user(interaction.user.id)
+    await add_xp(interaction.user.id, 1)
+    user = await get_user(interaction.user.id)
+    await check_level_up(user, interaction)
+
     await interaction.response.send_message(f"🧠 Shrek přemýšlí o: *{text}*")
     await interaction.followup.send(random.choice(ai_answers))
 
+
 @tree.command(name="pomoc", description="Zobrazí seznam příkazů")
 async def pomoc(interaction: discord.Interaction):
+    # XP za slash command
+    user = await get_user(interaction.user.id)
+    await add_xp(interaction.user.id, 1)
+    user = await get_user(interaction.user.id)
+    await check_level_up(user, interaction)
+
     text = """
 🧅 **SHREK BOT CZ – SLASH PŘÍKAZY**
 
@@ -267,7 +323,6 @@ async def pomoc(interaction: discord.Interaction):
 /pomoc  
 """
     await interaction.response.send_message(text)
-
 # ====== ON MESSAGE ======
 @bot.event
 async def on_message(message):
