@@ -1,77 +1,241 @@
 # shrek.py
 import os
+import random
 import logging
-import asyncio
+import sys
+import discord
+from discord.ext import commands
+from discord import app_commands
+from dotenv import load_dotenv
+from typing import Optional
+import time
 from datetime import datetime
 
-import discord
-from discord import app_commands
-from discord.ext import commands
+# ====== ENV TOKEN ======
+load_dotenv()
+DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
 
-from database import init_db, get_user, set_title, touch_user
+if not DISCORD_TOKEN:
+    print("ERROR: DISCORD_TOKEN není nastaven.")
+    sys.exit(1)
 
-# Logging
-logging.basicConfig(level=logging.INFO)
+# ====== LOGGING ======
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 logger = logging.getLogger("shrek-bot")
 
-# Intents
+# ====== INTENTS ======
 intents = discord.Intents.default()
-intents.members = True
-intents.message_content = False
+intents.message_content = True
 
-# Bot setup
 bot = commands.Bot(command_prefix="!", intents=intents)
 tree = bot.tree
 
-DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
+# ====== DATA ======
+shrek_quotes = [
+    "🧅 Ogres jsou jako cibule!",
+    "🏞️ Tohle je moje bažina!",
+    "😡 Co děláš v mojí bažině?!",
+    "🐴 Osle, drž zobák!",
+    "👑 Nejsem princ. Jsem Shrek.",
+    "💚 Radši ven než dovnitř.",
+    "🗿 Krása je uvnitř… ale já jsem krásný i venku.",
+    "Bažina volá… a já odpovídám.",
+    "Jestli sem vlezeš ještě jednou, udělám z tebe hnojivo.",
+    "Mám hlad. A ty nevypadáš jedle.",
+    "Někdo tu smrdí… a tentokrát to nejsem já.",
+    "Jestli chceš moudro, běž za Fionou. Já ti dám jen pravdu.",
+    "Máš problém? V bažině jich mám plno, přidej se.",
+    "Nesnáším lidi. Ale tebe… tebe nesnáším o trochu víc."
+]
 
+swamp_events = [
+    "Bažina bublá… něco smrdí. 💨",
+    "Shrek hází bahno po okolí. 😂",
+    "Osel zpívá… a Shrek ho chce umlčet. 🎤",
+    "Ve vodě je podezřelá cibule. 🧅",
+    "Shrek si označuje teritorium. 😈"
+]
+
+ai_answers = [
+    "Ty mluvíš… a bažina pláče.",
+    "Tohle řekl někdo, kdo spadl do bahna po hlavě.",
+    "Osle by to řekl líp. A to je co říct.",
+    "Máš charisma mokré ponožky.",
+    "Mluv dál… aspoň se bažina zasměje.",
+    "Ty nejsi cibule. Ty jsi brambora.",
+    "Když přemýšlíš, slyším šplouchání.",
+    "Tohle není chyba. To je tvoje osobnost.",
+    "Tohle je tak hluboké, že se bažina rozesmála.",
+    "Kdybys přemýšlel víc, uvaříš si mozek."
+]
+
+nice_answers = [
+    "Hele… nejsi tak špatnej, jak si myslíš.",
+    "Bažina je lepší, když tu jsi.",
+    "Možná jsem ogre… ale ty nejsi úplně k zahození.",
+    "Někdy jsi fakt otravnej… ale mám tě docela rád.",
+    "Víš… nejsi úplně marný. To je kompliment.",
+    "Možná nejsi cibule… ale máš svoje vrstvy.",
+    "Jsi lepší než většina, co sem vleze.",
+    "Neříkej to nikomu, ale… jsi mi sympatickej.",
+    "Jsi jako teplé bahno. Nepříjemné, ale vlastně uklidňující.",
+    "Jsi světlo v bažině. Slabé, ale je tam."
+]
+
+roasts = [
+    "smrdíš jak mokrá bažina.",
+    "vypadáš jak plesnivá cibule.",
+    "jsi jak bahno po dešti-smrdíš.",
+    "smrdíš víc než Osel po běhu.",
+    "vypadáš jak cibule po týdnu v bahně.",
+    "jsi jak žumpa na slunci.",
+    "jsi jak šlem z bažiny.",
+    "máš mozek jak mokrá houba.",
+    "jsi jak plesnivý mech na kameni.",
+    "smraďochu."
+]
+
+role_replies = {
+    "Rivals Master": [
+        "Tak tohle je ten Rivals Master? Čekal jsem víc vrstev… i cibule má víc."
+    ],
+    "Pillars Master": [
+        "Pillars Master… no jo, ten co si myslí, že je chytřejší než Shrek. Doufám že příště z toho pilíře spadneš"
+    ],
+    "Velkej Táta Shrek": [
+        "Aha, velkej šéf bažiny přišel. Konečně někdo, kdo má větší IQ než Osel."
+    ],
+    "Lord Farquaad": [
+        "Farquaad přišel… a bažina je hned o něco krásnější.🥵"
+    ]
+}
+
+last_role_reply = {k: 0 for k in role_replies}
+ROLE_COOLDOWN = 7200
+last_auto_ai = 0
+AUTO_AI_COOLDOWN = 5
+
+# ====== READY ======
 @bot.event
 async def on_ready():
-    # Inicializace DB před synchronizací příkazů
-    await init_db()
-    await tree.sync()
-    logger.info(f"Bot je online jako {bot.user} (id: {bot.user.id})")
+    try:
+        await tree.sync()
+        logger.info(f"Slash commands synchronizovány jako: {bot.user}")
+    except Exception as e:
+        logger.exception("Chyba při syncu: %s", e)
 
-# Simple slash command that touches user record
-@tree.command(name="shrek", description="Pozdraví a aktualizuje poslední přítomnost uživatele")
+# ====== SLASH COMMANDS ======
+@tree.command(name="shrek", description="Shrek řekne náhodnou hlášku")
 async def shrek(interaction: discord.Interaction):
-    user_id = interaction.user.id
-    await touch_user(user_id)
-    await interaction.response.send_message(f"Ahoj {interaction.user.display_name} — zaznamenal jsem tě.", ephemeral=True)
+    await interaction.response.send_message(random.choice(shrek_quotes))
 
-# Profile command shows stored info
-@tree.command(name="profil", description="Zobrazí informace o tobě z databáze")
-async def profil(interaction: discord.Interaction):
-    user_id = interaction.user.id
-    row = await get_user(user_id)
-    if not row:
-        await interaction.response.send_message("Nemám o tobě žádné informace.", ephemeral=True)
+@tree.command(name="swamp", description="Vstup do Shrekovy bažiny")
+async def swamp(interaction: discord.Interaction):
+    await interaction.response.send_message("🏞️ Vítej v Shrekově bažině!")
+    await interaction.followup.send(random.choice(swamp_events))
+
+@tree.command(name="osel", description="Osel něco řekne")
+async def osel(interaction: discord.Interaction):
+    await interaction.response.send_message("🐴 Já jsem Osel! A jsem otravnej a hrdý na to!")
+
+@tree.command(name="cibule", description="Zjisti, kolik vrstev má cibule")
+async def cibule(interaction: discord.Interaction):
+    vrstvy = random.randint(2, 10)
+    await interaction.response.send_message(f"🧅 Tahle cibule má **{vrstvy} vrstev**. Jako ty.")
+
+@tree.command(name="nadavka", description="Shrek někoho urazí")
+async def nadavka(interaction: discord.Interaction, member: Optional[discord.Member] = None):
+    if member:
+        await interaction.response.send_message(f"😈 {member.mention}, Shrek říká: {random.choice(roasts)}")
+    else:
+        await interaction.response.send_message("😈 Koho mám urazit, ty cibulo?")
+
+@tree.command(name="roast", description="Shrek někoho roastne")
+async def roast(interaction: discord.Interaction, member: Optional[discord.Member] = None):
+    if member:
+        await interaction.response.send_message(f"🔥 {member.mention} {random.choice(roasts)}")
+    else:
+        await interaction.response.send_message("🔥 Koho mám hodit do bahna?")
+
+@tree.command(name="ai", description="Shrek ti odpoví jako AI")
+async def ai(interaction: discord.Interaction, text: str):
+    await interaction.response.send_message(f"🧠 Shrek přemýšlí o: *{text}*")
+    await interaction.followup.send(random.choice(ai_answers))
+
+@tree.command(name="pomoc", description="Zobrazí seznam příkazů")
+async def pomoc(interaction: discord.Interaction):
+    text = """
+🧅 **SHREK BOT CZ – SLASH PŘÍKAZY**
+
+/shrek  
+/swamp  
+/osel  
+/cibule  
+/nadavka @uživatel  
+/roast @uživatel  
+/ai text  
+/pomoc  
+"""
+    await interaction.response.send_message(text)
+
+# ====== ON MESSAGE ======
+@bot.event
+async def on_message(message):
+    global last_role_reply, last_auto_ai
+
+    if message.author == bot.user:
         return
 
-    title = row.get("title") or "Žádný titul"
-    created = row.get("created_at")
-    last_seen = row.get("last_seen")
+    now = time.time()
+    msg = message.content.lower()
 
-    created_str = created.strftime("%Y-%m-%d %H:%M:%S UTC") if isinstance(created, datetime) else str(created)
-    last_seen_str = last_seen.strftime("%Y-%m-%d %H:%M:%S UTC") if isinstance(last_seen, datetime) else str(last_seen)
+    # 1) ROLE REAKCE
+    for role in message.author.roles:
+        if role.name in role_replies:
+            if now - last_role_reply[role.name] > ROLE_COOLDOWN:
+                await message.channel.send(random.choice(role_replies[role.name]))
+                last_role_reply[role.name] = now
+                return
 
-    embed = discord.Embed(title=f"Profil {interaction.user.display_name}", color=discord.Color.green())
-    embed.add_field(name="Titul", value=title, inline=False)
-    embed.add_field(name="Vytvořeno", value=created_str, inline=True)
-    embed.add_field(name="Naposledy viděn", value=last_seen_str, inline=True)
-    await interaction.response.send_message(embed=embed, ephemeral=True)
+    # 2) AUTO AI ODPOVĚDI
+    if now - last_auto_ai > AUTO_AI_COOLDOWN:
 
-# Command to set a title
-@tree.command(name="nastav_titul", description="Nastaví tvůj titul v DB")
-@app_commands.describe(titul="Text titulu, který chceš uložit")
-async def nastav_titul(interaction: discord.Interaction, titul: str):
-    user_id = interaction.user.id
-    await set_title(user_id, titul)
-    await interaction.response.send_message(f"Titul nastaven na: {titul}", ephemeral=True)
+        greetings = ["ahoj", "čau", "cau", "zdar", "zdarec", "cus", "čus", "nazdar"]
+        laughs = ["lol", "haha", "lmao", "xd"]
+        negatives = ["ne", "nikdy", "rozhodně ne", "ani náhodou"]
 
-# Run
+        async def send_ai_reply():
+            if random.random() < 0.20:
+                await message.channel.send(random.choice(nice_answers))
+            else:
+                await message.channel.send(random.choice(ai_answers))
+
+        if any(g in msg for g in greetings):
+            await send_ai_reply()
+            last_auto_ai = now
+            return
+
+        if any(l in msg for l in laughs):
+            await send_ai_reply()
+            last_auto_ai = now
+            return
+
+        if any(n in msg for n in negatives):
+            await send_ai_reply()
+            last_auto_ai = now
+            return
+
+        if "shrek" in msg:
+            await message.channel.send("🧅 Někdo mě volal z bažiny?")
+            last_auto_ai = now
+            return
+
+    await bot.process_commands(message)
+
+# ====== START ======
 if __name__ == "__main__":
-    if not DISCORD_TOKEN:
-        logger.error("DISCORD_TOKEN není nastaven v proměnných prostředí.")
-    else:
+    try:
         bot.run(DISCORD_TOKEN)
+    except Exception as e:
+        logger.exception("Bot se nepodařilo spustit: %s", e)
+        sys.exit(1)
