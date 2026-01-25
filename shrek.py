@@ -8,7 +8,6 @@ from discord import app_commands
 from dotenv import load_dotenv
 from typing import Optional
 import time
-from database import init_db
 from database import init_db, get_user, add_xp, set_level_and_title
 
 # ====== ENV TOKEN ======
