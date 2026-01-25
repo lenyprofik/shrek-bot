@@ -8,6 +8,7 @@ from discord import app_commands
 from dotenv import load_dotenv
 from typing import Optional
 import time
+from database import init_db
 
 # ====== ENV TOKEN ======
 load_dotenv()
