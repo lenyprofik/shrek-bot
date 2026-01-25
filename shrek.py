@@ -7,15 +7,14 @@ from discord.ext import commands
 from discord import app_commands
 from dotenv import load_dotenv
 from typing import Optional
+import time
 
 # ====== ENV TOKEN ======
 load_dotenv()
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
 
-# ====== BASIC CHECKS ======
 if not DISCORD_TOKEN:
-    # Pokud token není nastaven, skončíme s chybou (prevence NoneType tokenu)
-    print("ERROR: DISCORD_TOKEN není nastaven. Nastav proměnnou prostředí v Railway nebo .env souboru.")
+    print("ERROR: DISCORD_TOKEN není nastaven.")
     sys.exit(1)
 
 # ====== LOGGING ======
@@ -24,23 +23,32 @@ logger = logging.getLogger("shrek-bot")
 
 # ====== INTENTS ======
 intents = discord.Intents.default()
-intents.message_content = True  # potřeba pro on_message
+intents.message_content = True
 
-# ====== BOT & TREE ======
 bot = commands.Bot(command_prefix="!", intents=intents)
 tree = bot.tree
 
 # ====== DATA ======
+
+# Normální Shrek hlášky
 shrek_quotes = [
-    "🧅 Ogres jsou jako cibule!",
+    "🧅 Zlobř jsou jako cibule!",
     "🏞️ Tohle je moje bažina!",
     "😡 Co děláš v mojí bažině?!",
     "🐴 Osle, drž zobák!",
     "👑 Nejsem princ. Jsem Shrek.",
     "💚 Radši ven než dovnitř.",
     "🗿 Krása je uvnitř… ale já jsem krásný i venku.",
+    "Bažina volá… a já odpovídám.",
+    "Jestli sem vlezeš ještě jednou, udělám z tebe hnojivo.",
+    "Mám hlad. A ty nevypadáš jedle.",
+    "Někdo tu smrdí… a tentokrát to nejsem já.",
+    "Jestli chceš moudro, běž za Fionou. Já ti dám jen pravdu.",
+    "Máš problém? V bažině jich mám plno, přidej se.",
+    "Nesnáším lidi. Ale tebe… tebe nesnáším o trochu víc."
 ]
 
+# Události v bažině
 swamp_events = [
     "Bažina bublá… něco smrdí. 💨",
     "Shrek hází bahno po okolí. 😂",
@@ -49,6 +57,7 @@ swamp_events = [
     "Shrek si označuje teritorium. 😈"
 ]
 
+# AI odpovědi
 ai_answers = [
     "Ty mluvíš… a bažina pláče.",
     "Tohle řekl někdo, kdo spadl do bahna po hlavě.",
@@ -57,30 +66,73 @@ ai_answers = [
     "Mluv dál… aspoň se bažina směje.",
     "Ty nejsi cibule. Ty jsi brambora.",
     "Když přemýšlíš, slyším šplouchání.",
-    "Tohle není chyba. To je tvoje osobnost."
+    "Tohle není chyba. To je tvoje osobnost.",
+    "Tohle je tak hluboké, že se bažina rozesmála.",
+    "Kdybys přemýšlel víc, uvaříš si mozek.",
+    "Tohle by ani Osel nechtěl slyšet.",
+    "Jsi dno bažiny. Gratuluju.",
+    "Máš pravdu… někde v paralelním vesmíru.",
+    "Tohle je tak špatné, že radši sním syrovou cibuli.",
+    "Bažina ti odpovídá: ‘Prosím, už nemluv.’",
+    "Tohle je úroveň Farquaada… a to je co říct.",
+    "Jestli tohle byla otázka, odpověď je NE.",
+    "Tvůj mozek právě udělal *plop*.",
+    "Tohle je tak mimo, že i drak by se urazil.",
+    "Chceš být chytrý? Začni tím, že přestaneš psát.",
+    "Tohle je tak špatné, že tě pošlu zpátky do bažiny na restart."
 ]
 
-smart_triggers = {
-    "ahoj": ["Nazdar, cibulo.", "Čau. Nešlapej mi po bahně.", "Zdravím, návštěvníku bažiny."],
-    "jak": ["Jak? Blbě.", "Na styl Shreka.", "S bahnem a elegancí."],
-    "proč": ["Protože bažina rozhodla.", "Protože Osel mlčí.", "Protože Shrek řekl."],
-    "lol": ["Směj se, než uklouzneš.", "Haha… bažina má humor.", "Tvůj smích zní jak žába."],
-    "ne": ["Bažina nesouhlasí.", "Tvoje ne je slabé.", "Řekl jsi ne, ale myslíš ano."],
+# Drsné roasty
+roasts = [
+    "je jak rozlitá cibulová polévka.",
+    "má osobnost mokrého kamene.",
+    "by prohrál i s Oslem v šachu.",
+    "má charisma plesnivé houby.",
+    "je legenda… v bažině trapnosti.",
+    "má mozek jak mokrá houba po týdnu v bažině.",
+    "vypadá, jako kdyby ho Osel učil žít.",
+    "má styl jak rozšlapaná cibule.",
+    "je tak slabý, že by ho porazila i Fiona po ránu.",
+    "má ego větší než Farquaadův hrad, ale skill menší než Oslova trpělivost.",
+    "je tak zbytečný, že by ho ani drak nesežral.",
+    "má charisma jako mokrý mech na kameni.",
+    "je tak pomalý, že by ho předběhla i bažina."
+]
+
+# Role reakce
+role_replies = {
+    "Rivals Master": [
+        "Tak tohle je ten vítěz? Čekal jsem víc vrstev… i cibule má víc."
+    ],
+    "Pillars Master": [
+        "Pillars Master… no jo, ten co si myslí, že je chytřejší než Shrek. Hodně štěstí."
+    ],
+    "Velkej Táta Shrek": [
+        "Aha, velkej šéf bažiny přišel. Konečně někdo, kdo má větší ego než Osel."
+    ],
+    "Lord Farquaad": [
+        "Farquaad přišel… a bažina je hned o něco krásnější."
+    ]
 }
 
-# ====== READY EVENT ======
+# Cooldown
+last_role_reply = 0
+ROLE_COOLDOWN = 20
+
+last_auto_ai = 0
+AUTO_AI_COOLDOWN = 2
+
+# ====== READY ======
 @bot.event
 async def on_ready():
     try:
-        # Pokud chceš rychlejší vývoj, můžeš synchronizovat jen do jedné testovací guildy:
-        # GUILD_ID = 123456789012345678
-        # await tree.sync(guild=discord.Object(id=GUILD_ID))
         await tree.sync()
-        logger.info(f"✅ Slash commands synchronizovány jako: {bot.user}")
+        logger.info(f"Slash commands synchronizovány jako: {bot.user}")
     except Exception as e:
-        logger.exception("Chyba při synchronizaci slash commands: %s", e)
+        logger.exception("Chyba při syncu: %s", e)
 
 # ====== SLASH COMMANDS ======
+
 @tree.command(name="shrek", description="Shrek řekne náhodnou hlášku")
 async def shrek(interaction: discord.Interaction):
     await interaction.response.send_message(random.choice(shrek_quotes))
@@ -99,23 +151,15 @@ async def cibule(interaction: discord.Interaction):
     vrstvy = random.randint(2, 10)
     await interaction.response.send_message(f"🧅 Tahle cibule má **{vrstvy} vrstev**. Jako ty.")
 
-# member je volitelný; pokud není zvolen, bot odpoví obecně
-@tree.command(name="nadavka", description="Shrek někoho urazí (volitelně vyber uživatele)")
+@tree.command(name="nadavka", description="Shrek někoho urazí")
 async def nadavka(interaction: discord.Interaction, member: Optional[discord.Member] = None):
     if member:
         await interaction.response.send_message(f"😈 {member.mention}, Shrek říká: Jsi jak mokrá bažina!")
     else:
         await interaction.response.send_message("😈 Koho mám urazit, ty cibulo?")
 
-@tree.command(name="roast", description="Shrek někoho roastne (volitelně vyber uživatele)")
+@tree.command(name="roast", description="Shrek někoho roastne")
 async def roast(interaction: discord.Interaction, member: Optional[discord.Member] = None):
-    roasts = [
-        "je jak rozlitá cibulová polévka.",
-        "má osobnost mokrého kamene.",
-        "by prohrál i s Oslem v šachu.",
-        "má charisma plesnivé houby.",
-        "je legenda… v bažině trapnosti."
-    ]
     if member:
         await interaction.response.send_message(f"🔥 {member.mention} {random.choice(roasts)}")
     else:
@@ -142,52 +186,39 @@ async def pomoc(interaction: discord.Interaction):
 """
     await interaction.response.send_message(text)
 
-# ====== AUTO AI (on_message) ======
-# jednoduchý cooldown pro automatické odpovědi (prevence spamu)
-_auto_ai_last = 0
-_AUTO_AI_COOLDOWN = 5  # v sekundách
+# ====== ON MESSAGE ======
 
 @bot.event
 async def on_message(message):
-    global _auto_ai_last
+    global last_role_reply, last_auto_ai
+
     if message.author == bot.user:
         return
 
-    # zpracuj příkazy nejdřív
-    await bot.process_commands(message)
-
-    # automatické odpovědi (jen pokud je cooldown uplynul)
-    import time
+    # Role reakce
     now = time.time()
-    if now - _auto_ai_last < _AUTO_AI_COOLDOWN:
-        return
+    if now - last_role_reply > ROLE_COOLDOWN:
+        for role in message.author.roles:
+            if role.name in role_replies:
+                await message.channel.send(random.choice(role_replies[role.name]))
+                last_role_reply = now
+                break
 
-    msg = message.content.lower()
+    # Auto AI odpovědi
+    if now - last_auto_ai > AUTO_AI_COOLDOWN:
+        msg = message.content.lower()
 
-    for key, replies in smart_triggers.items():
-        if key in msg and random.random() < 0.35:
-            await message.channel.send(random.choice(replies))
-            _auto_ai_last = now
-            return
+        for key in ["ahoj", "jak", "proč", "lol", "ne"]:
+            if key in msg:
+                await message.channel.send(random.choice(ai_answers))
+                last_auto_ai = now
+                break
 
-    if random.random() < 0.05:
-        await message.channel.send("😈 " + random.choice(ai_answers))
-        _auto_ai_last = now
-        return
+        if "shrek" in msg:
+            await message.channel.send("🧅 Někdo mě volal z bažiny?")
+            last_auto_ai = now
 
-    if "shrek" in msg:
-        await message.channel.send("🧅 Někdo mě volal z bažiny?")
-        _auto_ai_last = now
-
-# ====== GLOBAL ERROR HANDLING FOR COMMANDS ======
-@bot.event
-async def on_command_error(ctx, error):
-    # Loguj chybu a informuj uživatele stručně
-    logger.exception("Chyba v příkazu: %s", error)
-    try:
-        await ctx.send("Došlo k chybě při vykonávání příkazu. Mrkni do logu.")
-    except Exception:
-        pass
+    await bot.process_commands(message)
 
 # ====== START ======
 if __name__ == "__main__":
