@@ -1,11 +1,10 @@
-
 import os
 import asyncpg
 import logging
 
 logger = logging.getLogger("shrek-db")
 DATABASE_URL = os.getenv("DATABASE_URL")
-_pool = None
+_pool: asyncpg.pool.Pool | None = None
 
 async def init_db():
     global _pool
@@ -24,6 +23,7 @@ async def init_db():
             last_seen TIMESTAMP WITH TIME ZONE DEFAULT now()
         );
         """)
+        await conn.execute("CREATE INDEX IF NOT EXISTS idx_users_xp ON users (xp DESC);")
     logger.info("Databáze inicializována a pool vytvořen.")
 
 async def get_user(user_id: int):
