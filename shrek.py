@@ -48,7 +48,7 @@ ai_answers = [
 ]
 
 smart_triggers = {
-    "čaute": ["Nazdar, cibulo.", "Čau. Nešlapej mi po bahně.", "Zdravím, návštěvníku bažiny."],
+    "ahoj": ["Nazdar, cibulo.", "Čau. Nešlapej mi po bahně.", "Zdravím, návštěvníku bažiny."],
     "jak": ["Jak? Blbě.", "Na styl Shreka.", "S bahnem a elegancí."],
     "proč": ["Protože bažina rozhodla.", "Protože Osel mlčí.", "Protože Shrek řekl."],
     "lol": ["Směj se, než uklouzneš.", "Haha… bažina má humor.", "Tvůj smích zní jak žába."],
@@ -95,50 +95,4 @@ async def roast(interaction: discord.Interaction, member: discord.Member):
         "má charisma plesnivé houby.",
         "je legenda… v bažině trapnosti."
     ]
-    await interaction.response.send_message(f"🔥 {member.mention} {random.choice(roasts)}")
-
-@tree.command(name="ai", description="Shrek ti odpoví jako AI")
-async def ai(interaction: discord.Interaction, text: str):
-    await interaction.response.send_message(f"🧠 Shrek přemýšlí o: *{text}*")
-    await interaction.followup.send(random.choice(ai_answers))
-
-@tree.command(name="pomoc", description="Zobrazí seznam příkazů")
-async def pomoc(interaction: discord.Interaction):
-    text = """
-🧅 **SHREK BOT CZ – SLASH PŘÍKAZY**
-
-/shrek  
-/swamp  
-/osel  
-/cibule  
-/nadavka @uživatel  
-/roast @uživatel  
-/ai text  
-/pomoc  
-"""
-    await interaction.response.send_message(text)
-
-# ====== AUTO AI ======
-
-@bot.event
-async def on_message(message):
-    if message.author == bot.user:
-        return
-
-    msg = message.content.lower()
-
-    for key, replies in smart_triggers.items():
-        if key in msg and random.random() < 0.35:
-            await message.channel.send(random.choice(replies))
-            break
-
-    if random.random() < 0.05:
-        await message.channel.send("😈 " + random.choice(ai_answers))
-
-    if "shrek" in msg:
-        await message.channel.send("🧅 Někdo mě volal z bažiny?")
-
-    await bot.process_commands(message)
-
-# ====== START ======
-bot.run(DISCORD_TOKEN)
+    await
