@@ -206,7 +206,9 @@ async def check_level_up(user, source):
             f"Titul: *{new_title}*\n"
             f"„Bažina tě začíná respektovat.“"
         )
-# ====== READY ======
+# ====== READY + EVENT ENGINE ======
+import asyncio  # musí být nahoře v importech
+
 # ====== EVENT ENGINE ======
 async def event_engine():
     await bot.wait_until_ready()
@@ -221,7 +223,6 @@ async def event_engine():
         wait_minutes = random.randint(40, 100)
         await asyncio.sleep(wait_minutes * 60)
 
-        # Najdeme všechny online hráče
         guild = channel.guild
         online_members = [
             m for m in guild.members
@@ -233,7 +234,6 @@ async def event_engine():
             await channel.send("🌫️ Bažina je tichá… nikdo není online.")
             continue
 
-        # Rozhodnutí typu eventu
         roll = random.random()
 
         # 5 % šance na ultra-rare event: MINUS LEVEL
@@ -251,7 +251,6 @@ async def event_engine():
                     new_level = old_level - 1
                     new_title = title_for_level(new_level)
 
-                    # Nastavení nového levelu
                     await set_level_and_title(member.id, new_level, new_title)
 
                     # Odebrání role pokud spadnou pod level 3
@@ -261,10 +260,8 @@ async def event_engine():
                             await member.remove_roles(role)
 
                     await channel.send(f"❌ {member.mention} spadl na level **{new_level}**!")
-
                 else:
                     await channel.send(f"😬 {member.mention} je už na minimu… level 1 zůstává.")
-
             continue
 
         # 50 % šance na pozitivní event
@@ -276,11 +273,9 @@ async def event_engine():
             )
 
             for member in online_members:
-                user = await get_user(member.id)
                 await add_xp(member.id, xp_gain)
                 user = await get_user(member.id)
                 await check_level_up(user, channel)
-
             continue
 
         # 45 % šance na negativní event
@@ -292,20 +287,13 @@ async def event_engine():
             )
 
             for member in online_members:
-                user = await get_user(member.id)
-
-                # XP mohou jít do mínusu
-                new_xp = user["xp"] - xp_loss
                 await add_xp(member.id, -xp_loss)
-
-                # Level se nesnižuje (jen XP), to dělá jen speciální event
                 user = await get_user(member.id)
                 await check_level_up(user, channel)
-
             continue
 
 
-# Spuštění event enginu po startu bota
+# ====== READY ======
 @bot.event
 async def on_ready():
     await init_db()
@@ -320,20 +308,6 @@ async def on_ready():
 
     # Spuštění event enginu
     bot.loop.create_task(event_engine())
-@bot.event
-async def on_ready():
-    # 1) Připojení k databázi (musí být úplně první!)
-    await init_db()
-
-    # 2) Sync slash commandů
-    try:
-        await tree.sync()
-        logger.info(f"Slash commands synchronizovány jako: {bot.user}")
-    except Exception as e:
-        logger.exception("Chyba při syncu: %s", e)
-
-    # 3) Informace do konzole
-    print(f"Bot je online jako {bot.user}")
 # ====== SLASH COMMANDS ======
 
 @tree.command(name="shrek", description="Shrek řekne náhodnou hlášku")
