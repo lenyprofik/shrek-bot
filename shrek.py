@@ -5,18 +5,18 @@ from discord.ext import commands
 from discord import app_commands
 from dotenv import load_dotenv
 
-# ====== ENV TOKEN ======
+====== ENV TOKEN ======
 load_dotenv()
-DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
+DISCORDTOKEN = os.getenv("DISCORDTOKEN")
 
-# ====== INTENTS ======
+====== INTENTS ======
 intents = discord.Intents.default()
 intents.message_content = True
 
 bot = commands.Bot(command_prefix="!", intents=intents)
 tree = bot.tree
 
-# ====== DATA ======
+====== DATA ======
 
 shrek_quotes = [
     "🧅 Ogres jsou jako cibule!",
@@ -55,18 +55,18 @@ smart_triggers = {
     "ne": ["Bažina nesouhlasí.", "Tvoje ne je slabé.", "Řekl jsi ne, ale myslíš ano."],
 }
 
-# ====== READY EVENT ======
+====== READY EVENT ======
 
 @bot.event
 async def on_ready():
     await tree.sync()
     print(f"✅ Slash commands synchronizovány jako: {bot.user}")
 
-# ====== SLASH COMMANDS ======
+====== SLASH COMMANDS ======
 
 @tree.command(name="shrek", description="Shrek řekne náhodnou hlášku")
 async def shrek(interaction: discord.Interaction):
-    await interaction.response.send_message(random.choice(shrek_quotes))
+    await interaction.response.sendmessage(random.choice(shrekquotes))
 
 @tree.command(name="swamp", description="Vstup do Shrekovy bažiny")
 async def swamp(interaction: discord.Interaction):
@@ -80,7 +80,7 @@ async def osel(interaction: discord.Interaction):
 @tree.command(name="cibule", description="Zjisti, kolik vrstev má cibule")
 async def cibule(interaction: discord.Interaction):
     vrstvy = random.randint(2, 10)
-    await interaction.response.send_message(f"🧅 Tahle cibule má **{vrstvy} vrstev**. Jako ty.")
+    await interaction.response.send_message(f"🧅 Tahle cibule má {vrstvy} vrstev. Jako ty.")
 
 @tree.command(name="nadavka", description="Shrek někoho urazí")
 async def nadavka(interaction: discord.Interaction, member: discord.Member):
@@ -95,4 +95,50 @@ async def roast(interaction: discord.Interaction, member: discord.Member):
         "má charisma plesnivé houby.",
         "je legenda… v bažině trapnosti."
     ]
-    await
+    await interaction.response.send_message(f"🔥 {member.mention} {random.choice(roasts)}")
+
+@tree.command(name="ai", description="Shrek ti odpoví jako AI")
+async def ai(interaction: discord.Interaction, text: str):
+    await interaction.response.send_message(f"🧠 Shrek přemýšlí o: {text}")
+    await interaction.followup.send(random.choice(ai_answers))
+
+@tree.command(name="pomoc", description="Zobrazí seznam příkazů")
+async def pomoc(interaction: discord.Interaction):
+    text = """
+🧅 SHREK BOT CZ – SLASH PŘÍKAZY
+
+/shrek  
+/swamp  
+/osel  
+/cibule  
+/nadavka @uživatel  
+/roast @uživatel  
+/ai text  
+/pomoc  
+"""
+    await interaction.response.send_message(text)
+
+====== AUTO AI ======
+
+@bot.event
+async def on_message(message):
+    if message.author == bot.user:
+        return
+
+    msg = message.content.lower()
+
+    for key, replies in smart_triggers.items():
+        if key in msg and random.random() < 0.35:
+            await message.channel.send(random.choice(replies))
+            break
+
+    if random.random() < 0.05:
+        await message.channel.send("😈 " + random.choice(ai_answers))
+
+    if "shrek" in msg:
+        await message.channel.send("🧅 Někdo mě volal z bažiny?")
+
+    await bot.process_commands(message)
+
+====== START ======
+bot.run(DISCORD_TOKEN)
