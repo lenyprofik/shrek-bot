@@ -149,12 +149,13 @@ AUTO_AI_COOLDOWN = 5
 # ====== READY ======
 @bot.event
 async def on_ready():
+    await init_db()  # ← připojení k databázi
+
     try:
         await tree.sync()
         logger.info(f"Slash commands synchronizovány jako: {bot.user}")
     except Exception as e:
         logger.exception("Chyba při syncu: %s", e)
-
 # ====== SLASH COMMANDS ======
 @tree.command(name="shrek", description="Shrek řekne náhodnou hlášku")
 async def shrek(interaction: discord.Interaction):
