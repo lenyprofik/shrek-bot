@@ -1,1 +1,2 @@
-worker: python shrek.py
+
+web: python shrek.py
