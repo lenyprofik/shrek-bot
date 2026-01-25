@@ -321,9 +321,6 @@ async def on_message(message):
         await add_xp(message.author.id, 5)
         user = await get_user(message.author.id)
         await check_level_up(user, message)
-
-    await bot.process_commands(message)
-
     await bot.process_commands(message)
 
 # ====== START ======
