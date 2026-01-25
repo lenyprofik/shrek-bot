@@ -406,6 +406,22 @@ async def pomoc(interaction: discord.Interaction):
     await check_level_up(user, interaction)
 
     text = """
+
+@tree.command(name="profil", description="Zobrazí tvůj Shrek level, XP a titul")
+async def profil(interaction: discord.Interaction):
+    user = await get_user(interaction.user.id)
+
+    level = user["level"]
+    xp = user["xp"]
+    needed = xp_needed_for_level(level)
+    title = title_for_level(level)
+
+    await interaction.response.send_message(
+        f"🧅 **Tvůj Shrek profil:**\n"
+        f"**Level:** {level}\n"
+        f"**XP:** {xp} / {needed}\n"
+        f"**Titul:** *{title}*"
+    )
 🧅 **SHREK BOT CZ – SLASH PŘÍKAZY**
 
 /shrek  
@@ -416,6 +432,7 @@ async def pomoc(interaction: discord.Interaction):
 /roast @uživatel  
 /ai text  
 /pomoc  
+/profil
 """
     await interaction.response.send_message(text)
 # ====== ON MESSAGE ======
