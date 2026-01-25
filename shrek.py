@@ -357,8 +357,16 @@ async def on_message(message):
         negatives = ["ne", "nikdy", "rozhodně ne", "ani náhodou"]
 
         async def send_ai_reply():
+            # NICE ANSWERS + XP ZA NICE ANSWER
             if random.random() < 0.20:
                 await message.channel.send(random.choice(nice_answers))
+
+                # XP za nice answer
+                user = await get_user(message.author.id)
+                await add_xp(message.author.id, 10)
+                user = await get_user(message.author.id)
+                await check_level_up(user, message)
+
             else:
                 await message.channel.send(random.choice(ai_answers))
 
@@ -381,12 +389,15 @@ async def on_message(message):
             await message.channel.send("🧅 Někdo mě volal z bažiny?")
             last_auto_ai = now
             return
-# XP ZA ZPRÁVY V LEVELING KANÁLU
+
+    # 3) XP ZA ZPRÁVY V LEVELING KANÁLU
     if message.channel.name == "shrek-levling⚡":
         user = await get_user(message.author.id)
         await add_xp(message.author.id, 5)
         user = await get_user(message.author.id)
         await check_level_up(user, message)
+
+    # 4) ZPRACOVÁNÍ COMMANDŮ
     await bot.process_commands(message)
 
 # ====== START ======
