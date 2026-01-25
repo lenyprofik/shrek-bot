@@ -19,7 +19,7 @@ tree = bot.tree
 # ====== DATA ======
 
 shrek_quotes = [
-    "🧅 Ogres jsou jako cibule!",
+    "🧅 Zlobři jsou jako cibule!",
     "🏞️ Tohle je moje bažina!",
     "😡 Co děláš v mojí bažině?!",
     "🐴 Osle, drž zobák!",
@@ -52,7 +52,7 @@ smart_triggers = {
     "jak": ["Jak? Blbě.", "Na styl Shreka.", "S bahnem a elegancí."],
     "proč": ["Protože bažina rozhodla.", "Protože Osel mlčí.", "Protože Shrek řekl."],
     "lol": ["Směj se, než uklouzneš.", "Haha… bažina má humor.", "Tvůj smích zní jak žába."],
-    "ne": ["Bažina nesouhlasí.", "Tvoje ne je slabé.", "Řekl jsi ne, ale myslíš ano."],
+    "ne": ["Bažina nesouhlasí.", "Ne*ře", "Tvoje ne je slabé.", "Řekl jsi ne, ale myslíš ano."],
 }
 
 # ====== READY EVENT ======
