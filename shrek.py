@@ -117,7 +117,7 @@ role_replies = {
 
 # Cooldowny
 last_role_reply = 0
-ROLE_COOLDOWN = 10
+ROLE_COOLDOWN = 3600
 
 last_auto_ai = 0
 AUTO_AI_COOLDOWN = 5
