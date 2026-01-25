@@ -116,8 +116,15 @@ role_replies = {
 }
 
 # Cooldowny
-last_role_reply = 0
-ROLE_COOLDOWN = 3600
+last_role_reply = {
+    "Rivals Master": 0,
+    "Pillars Master": 0,
+    "Velkej Táta Shrek": 0,
+    "Lord Farquaad": 0
+}
+
+ROLE_COOLDOWN = 7200 
+
 
 last_auto_ai = 0
 AUTO_AI_COOLDOWN = 5
