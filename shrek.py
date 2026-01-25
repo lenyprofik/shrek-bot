@@ -1,7 +1,12 @@
-pip instal discord.py
+import os
 import discord
 from discord.ext import commands
 import random
+from dotenv import load_dotenv
+
+# ====== ENV TOKEN ======
+load_dotenv()
+DISCORD_TOKEN = os.getenv("MTQ2NDk0NDE4MjIwNzU3ODMzNw.Gkh-ud.Nj7OgARvhELSi2OGW4-r_8yzXap9V--qY6FjrQ")
 
 # ====== NASTAVENÍ ======
 intents = discord.Intents.default()
