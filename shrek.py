@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 
 # ====== ENV TOKEN ======
 load_dotenv()
-DISCORD_TOKEN = os.getenv("MTQ2NDk0NDE4MjIwNzU3ODMzNw.Gkh-ud.Nj7OgARvhELSi2OGW4-r_8yzXap9V--qY6FjrQ")
+DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
 
 # ====== INTENTS ======
 intents = discord.Intents.default()
@@ -19,7 +19,7 @@ tree = bot.tree
 # ====== DATA ======
 
 shrek_quotes = [
-    "🧅 Zlobři jsou jako cibule!",
+    "🧅 Ogres jsou jako cibule!",
     "🏞️ Tohle je moje bažina!",
     "😡 Co děláš v mojí bažině?!",
     "🐴 Osle, drž zobák!",
@@ -48,11 +48,11 @@ ai_answers = [
 ]
 
 smart_triggers = {
-    "ahoj": ["Nazdar, cibulo.", "Čau. Nešlapej mi po bahně.", "Zdravím, návštěvníku bažiny."],
+    "čaute": ["Nazdar, cibulo.", "Čau. Nešlapej mi po bahně.", "Zdravím, návštěvníku bažiny."],
     "jak": ["Jak? Blbě.", "Na styl Shreka.", "S bahnem a elegancí."],
     "proč": ["Protože bažina rozhodla.", "Protože Osel mlčí.", "Protože Shrek řekl."],
     "lol": ["Směj se, než uklouzneš.", "Haha… bažina má humor.", "Tvůj smích zní jak žába."],
-    "ne": ["Bažina nesouhlasí.", "Ne*ře", "Tvoje ne je slabé.", "Řekl jsi ne, ale myslíš ano."],
+    "ne": ["Bažina nesouhlasí.", "Tvoje ne je slabé.", "Řekl jsi ne, ale myslíš ano."],
 }
 
 # ====== READY EVENT ======
@@ -118,7 +118,7 @@ async def pomoc(interaction: discord.Interaction):
 """
     await interaction.response.send_message(text)
 
-# ====== AUTO AI (funguje i se slash commands) ======
+# ====== AUTO AI ======
 
 @bot.event
 async def on_message(message):
@@ -141,4 +141,4 @@ async def on_message(message):
     await bot.process_commands(message)
 
 # ====== START ======
-bot.run("MTQ2NDk0NDE4MjIwNzU3ODMzNw.Gkh-ud.Nj7OgARvhELSi2OGW4-r_8yzXap9V--qY6FjrQ")
+bot.run(DISCORD_TOKEN)
