@@ -146,6 +146,30 @@ last_role_reply = {
 ROLE_COOLDOWN = 7200
 last_auto_ai = 0
 AUTO_AI_COOLDOWN = 5
+def xp_needed_for_level(level: int) -> int:
+    if level < 3:
+        return 50
+    elif level < 10:
+        return 70
+    elif level < 15:
+        return 80
+    elif level < 20:
+        return 100
+    else:
+        return 999999999  # level 20 je max
+
+
+def title_for_level(level: int) -> str:
+    if level < 3:
+        return "Cibulový učedník"
+    elif level < 10:
+        return "Bahenní poutník"
+    elif level < 15:
+        return "Oslův rival"
+    elif level < 20:
+        return "Shrekův parťák"
+    else:
+        return "Legenda bažiny"
 
 # ====== READY ======
 @bot.event
