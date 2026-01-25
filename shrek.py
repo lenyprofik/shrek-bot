@@ -313,58 +313,48 @@ async def on_ready():
 
 @tree.command(name="shrek", description="Shrek řekne náhodnou hlášku")
 async def shrek(interaction: discord.Interaction):
-    # XP za slash command
     user = await get_user(interaction.user.id)
     await add_xp(interaction.user.id, 1)
     user = await get_user(interaction.user.id)
     await check_level_up(user, interaction)
-
     await interaction.response.send_message(random.choice(shrek_quotes))
 
 
 @tree.command(name="swamp", description="Vstup do Shrekovy bažiny")
 async def swamp(interaction: discord.Interaction):
-    # XP za slash command
     user = await get_user(interaction.user.id)
     await add_xp(interaction.user.id, 1)
     user = await get_user(interaction.user.id)
     await check_level_up(user, interaction)
-
     await interaction.response.send_message("🏞️ Vítej v Shrekově bažině!")
     await interaction.followup.send(random.choice(swamp_events))
 
 
 @tree.command(name="osel", description="Osel něco řekne")
 async def osel(interaction: discord.Interaction):
-    # XP za slash command
     user = await get_user(interaction.user.id)
     await add_xp(interaction.user.id, 1)
     user = await get_user(interaction.user.id)
     await check_level_up(user, interaction)
-
     await interaction.response.send_message("🐴 Já jsem Osel! A jsem otravnej a hrdý na to!")
 
 
 @tree.command(name="cibule", description="Zjisti, kolik vrstev má cibule")
 async def cibule(interaction: discord.Interaction):
-    # XP za slash command
     user = await get_user(interaction.user.id)
     await add_xp(interaction.user.id, 1)
     user = await get_user(interaction.user.id)
     await check_level_up(user, interaction)
-
     vrstvy = random.randint(2, 10)
     await interaction.response.send_message(f"🧅 Tahle cibule má **{vrstvy} vrstev**. Jako ty.")
 
 
 @tree.command(name="nadavka", description="Shrek někoho urazí")
 async def nadavka(interaction: discord.Interaction, member: Optional[discord.Member] = None):
-    # XP za slash command
     user = await get_user(interaction.user.id)
     await add_xp(interaction.user.id, 1)
     user = await get_user(interaction.user.id)
     await check_level_up(user, interaction)
-
     if member:
         await interaction.response.send_message(f"😈 {member.mention}, Shrek říká: {random.choice(roasts)}")
     else:
@@ -373,12 +363,10 @@ async def nadavka(interaction: discord.Interaction, member: Optional[discord.Mem
 
 @tree.command(name="roast", description="Shrek někoho roastne")
 async def roast(interaction: discord.Interaction, member: Optional[discord.Member] = None):
-    # XP za slash command
     user = await get_user(interaction.user.id)
     await add_xp(interaction.user.id, 1)
     user = await get_user(interaction.user.id)
     await check_level_up(user, interaction)
-
     if member:
         await interaction.response.send_message(f"🔥 {member.mention} {random.choice(roasts)}")
     else:
@@ -387,41 +375,22 @@ async def roast(interaction: discord.Interaction, member: Optional[discord.Membe
 
 @tree.command(name="ai", description="Shrek ti odpoví jako AI")
 async def ai(interaction: discord.Interaction, text: str):
-    # XP za slash command
     user = await get_user(interaction.user.id)
     await add_xp(interaction.user.id, 1)
     user = await get_user(interaction.user.id)
     await check_level_up(user, interaction)
-
     await interaction.response.send_message(f"🧠 Shrek přemýšlí o: *{text}*")
     await interaction.followup.send(random.choice(ai_answers))
 
 
 @tree.command(name="pomoc", description="Zobrazí seznam příkazů")
 async def pomoc(interaction: discord.Interaction):
-    # XP za slash command
     user = await get_user(interaction.user.id)
     await add_xp(interaction.user.id, 1)
     user = await get_user(interaction.user.id)
     await check_level_up(user, interaction)
 
     text = """
-
-@tree.command(name="profil", description="Zobrazí tvůj Shrek level, XP a titul")
-async def profil(interaction: discord.Interaction):
-    user = await get_user(interaction.user.id)
-
-    level = user["level"]
-    xp = user["xp"]
-    needed = xp_needed_for_level(level)
-    title = title_for_level(level)
-
-    await interaction.response.send_message(
-        f"🧅 **Tvůj Shrek profil:**\n"
-        f"**Level:** {level}\n"
-        f"**XP:** {xp} / {needed}\n"
-        f"**Titul:** *{title}*"
-    )
 🧅 **SHREK BOT CZ – SLASH PŘÍKAZY**
 
 /shrek  
@@ -435,75 +404,24 @@ async def profil(interaction: discord.Interaction):
 /profil
 """
     await interaction.response.send_message(text)
-# ====== ON MESSAGE ======
-@bot.event
-async def on_message(message):
-    global last_role_reply, last_auto_ai
 
-    if message.author == bot.user:
-        return
 
-    now = time.time()
-    msg = message.content.lower()
+@tree.command(name="profil", description="Zobrazí tvůj Shrek level, XP a titul")
+async def profil(interaction: discord.Interaction):
+    user = await get_user(interaction.user.id)
 
-    # 1) ROLE REAKCE
-    for role in message.author.roles:
-        if role.name in role_replies:
-            if now - last_role_reply[role.name] > ROLE_COOLDOWN:
-                await message.channel.send(random.choice(role_replies[role.name]))
-                last_role_reply[role.name] = now
-                return
+    # bezpečné čtení hodnot (fallbacky pokud by chyběly)
+    level = user.get("level", 1) if isinstance(user, dict) else 1
+    xp = user.get("xp", 0) if isinstance(user, dict) else 0
+    needed = xp_needed_for_level(level)
+    title = title_for_level(level)
 
-    # 2) AUTO AI ODPOVĚDI
-    if now - last_auto_ai > AUTO_AI_COOLDOWN:
-
-        greetings = ["ahoj", "čau", "cau", "zdar", "zdarec", "cus", "čus", "nazdar"]
-        laughs = ["lol", "haha", "lmao", "xd"]
-        negatives = ["ne", "nikdy", "rozhodně ne", "ani náhodou"]
-
-        async def send_ai_reply():
-            # NICE ANSWERS + XP ZA NICE ANSWER
-            if random.random() < 0.20:
-                await message.channel.send(random.choice(nice_answers))
-
-                # XP za nice answer
-                user = await get_user(message.author.id)
-                await add_xp(message.author.id, 10)
-                user = await get_user(message.author.id)
-                await check_level_up(user, message)
-
-            else:
-                await message.channel.send(random.choice(ai_answers))
-
-        if any(g in msg for g in greetings):
-            await send_ai_reply()
-            last_auto_ai = now
-            return
-
-        if any(l in msg for l in laughs):
-            await send_ai_reply()
-            last_auto_ai = now
-            return
-
-        if any(n in msg for n in negatives):
-            await send_ai_reply()
-            last_auto_ai = now
-            return
-
-        if "shrek" in msg:
-            await message.channel.send("🧅 Někdo mě volal z bažiny?")
-            last_auto_ai = now
-            return
-
-    # 3) XP ZA ZPRÁVY V LEVELING KANÁLU
-    if message.channel.name == "shrek-levling⚡":
-        user = await get_user(message.author.id)
-        await add_xp(message.author.id, 5)
-        user = await get_user(message.author.id)
-        await check_level_up(user, message)
-
-    # 4) ZPRACOVÁNÍ COMMANDŮ
-    await bot.process_commands(message)
+    await interaction.response.send_message(
+        f"🧅 **Tvůj Shrek profil:**\n"
+        f"**Level:** {level}\n"
+        f"**XP:** {xp} / {needed}\n"
+        f"**Titul:** *{title}*"
+    )
 
 # ====== START ======
 if __name__ == "__main__":
