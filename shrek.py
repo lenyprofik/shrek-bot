@@ -203,13 +203,18 @@ async def check_level_up(user, message: discord.Message):
 # ====== READY ======
 @bot.event
 async def on_ready():
-    await init_db()  # připojení k databázi + vytvoření tabulky
+    # 1) Připojení k databázi (musí být úplně první!)
+    await init_db()
 
+    # 2) Sync slash commandů
     try:
         await tree.sync()
         logger.info(f"Slash commands synchronizovány jako: {bot.user}")
     except Exception as e:
         logger.exception("Chyba při syncu: %s", e)
+
+    # 3) Informace do konzole
+    print(f"Bot je online jako {bot.user}")
 # ====== SLASH COMMANDS ======
 @tree.command(name="shrek", description="Shrek řekne náhodnou hlášku")
 async def shrek(interaction: discord.Interaction):
