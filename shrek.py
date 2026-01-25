@@ -169,7 +169,7 @@ def title_for_level(level: int) -> str:
         return "Shrekův parťák"
     else:
         return "Legenda bažiny"
-async def check_level_up(user, message: discord.Message):
+async def check_level_up(user, source):
     user_id = user["user_id"]
     xp = user["xp"]
     level = user["level"]
@@ -184,21 +184,28 @@ async def check_level_up(user, message: discord.Message):
 
     await set_level_and_title(user_id, new_level, new_title)
 
+    # Rozlišení mezi zprávou a slash commandem
+    if isinstance(source, discord.Message):
+        guild = source.guild
+        author = source.author
+    else:
+        guild = source.guild
+        author = source.user
+
     # role při levelu 3
     if new_level == 3:
-        role = discord.utils.get(message.guild.roles, name="Bahenní poutník")
+        role = discord.utils.get(guild.roles, name="Bahenní poutník")
         if role:
-            await message.author.add_roles(role)
+            await author.add_roles(role)
 
     # level-up hláška do leveling kanálu
-    channel = discord.utils.get(message.guild.channels, name="shrek-levling⚡")
+    channel = discord.utils.get(guild.channels, name="shrek-levling⚡")
     if channel:
         await channel.send(
-            f"🎉 **{message.author.mention} dosáhl levelu {new_level}!**\n"
+            f"🎉 **{author.mention} dosáhl levelu {new_level}!**\n"
             f"Titul: *{new_title}*\n"
             f"„Bažina tě začíná respektovat.“"
         )
-
 # ====== READY ======
 @bot.event
 async def on_ready():
