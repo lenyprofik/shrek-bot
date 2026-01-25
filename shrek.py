@@ -207,6 +207,119 @@ async def check_level_up(user, source):
             f"„Bažina tě začíná respektovat.“"
         )
 # ====== READY ======
+# ====== EVENT ENGINE ======
+async def event_engine():
+    await bot.wait_until_ready()
+
+    channel = discord.utils.get(bot.get_all_channels(), name="shrekovy-eventy🧬")
+    if not channel:
+        print("⚠️ Event kanál 'shrekovy-eventy🧬' nebyl nalezen.")
+        return
+
+    while not bot.is_closed():
+        # Náhodný interval 40–100 minut
+        wait_minutes = random.randint(40, 100)
+        await asyncio.sleep(wait_minutes * 60)
+
+        # Najdeme všechny online hráče
+        guild = channel.guild
+        online_members = [
+            m for m in guild.members
+            if m.status in (discord.Status.online, discord.Status.idle, discord.Status.dnd)
+            and not m.bot
+        ]
+
+        if not online_members:
+            await channel.send("🌫️ Bažina je tichá… nikdo není online.")
+            continue
+
+        # Rozhodnutí typu eventu
+        roll = random.random()
+
+        # 5 % šance na ultra-rare event: MINUS LEVEL
+        if roll < 0.05:
+            await channel.send(
+                "💀 **Katastrofa v bažině!**\n"
+                "Bažina se zlobí… všichni aktivní hráči ztrácejí **1 level**!"
+            )
+
+            for member in online_members:
+                user = await get_user(member.id)
+                old_level = user["level"]
+
+                if old_level > 1:
+                    new_level = old_level - 1
+                    new_title = title_for_level(new_level)
+
+                    # Nastavení nového levelu
+                    await set_level_and_title(member.id, new_level, new_title)
+
+                    # Odebrání role pokud spadnou pod level 3
+                    if old_level >= 3 and new_level < 3:
+                        role = discord.utils.get(guild.roles, name="Bahenní poutník")
+                        if role and role in member.roles:
+                            await member.remove_roles(role)
+
+                    await channel.send(f"❌ {member.mention} spadl na level **{new_level}**!")
+
+                else:
+                    await channel.send(f"😬 {member.mention} je už na minimu… level 1 zůstává.")
+
+            continue
+
+        # 50 % šance na pozitivní event
+        elif roll < 0.525:
+            xp_gain = random.randint(10, 30)
+            await channel.send(
+                f"🌟 **Bažina žehná aktivním hráčům!**\n"
+                f"Všichni online získávají **+{xp_gain} XP**!"
+            )
+
+            for member in online_members:
+                user = await get_user(member.id)
+                await add_xp(member.id, xp_gain)
+                user = await get_user(member.id)
+                await check_level_up(user, channel)
+
+            continue
+
+        # 45 % šance na negativní event
+        else:
+            xp_loss = random.randint(5, 20)
+            await channel.send(
+                f"💨 **Bažina vypouští toxický plyn!**\n"
+                f"Všichni online přicházejí o **-{xp_loss} XP**!"
+            )
+
+            for member in online_members:
+                user = await get_user(member.id)
+
+                # XP mohou jít do mínusu
+                new_xp = user["xp"] - xp_loss
+                await add_xp(member.id, -xp_loss)
+
+                # Level se nesnižuje (jen XP), to dělá jen speciální event
+                user = await get_user(member.id)
+                await check_level_up(user, channel)
+
+            continue
+
+
+# Spuštění event enginu po startu bota
+@bot.event
+async def on_ready():
+    await init_db()
+
+    try:
+        await tree.sync()
+        logger.info(f"Slash commands synchronizovány jako: {bot.user}")
+    except Exception as e:
+        logger.exception("Chyba při syncu: %s", e)
+
+    print(f"Bot je online jako {bot.user}")
+
+    # Spuštění event enginu
+    bot.loop.create_task(event_engine())
 @bot.event
 async def on_ready():
     # 1) Připojení k databázi (musí být úplně první!)
