@@ -82,9 +82,22 @@ ai_answers = [
     "Tohle je tak špatné, že tě pošlu zpátky do bažiny na restart."
 ]
 
-# Nadávky kategorie 1, 4, 5 (bez puchu, hniloby, špindíry, zmetku)
+# Hezké odpovědi (20% šance)
+nice_answers = [
+    "Hele… nejsi tak špatnej, jak si myslíš.",
+    "Bažina je lepší, když tu jsi.",
+    "Možná jsem ogre… ale ty nejsi úplně k zahození.",
+    "Někdy jsi fakt otravnej… ale mám tě docela rád.",
+    "Víš… nejsi úplně marný. To je kompliment.",
+    "Možná nejsi cibule… ale máš svoje vrstvy.",
+    "Jsi lepší než většina, co sem vleze.",
+    "Neříkej to nikomu, ale… jsi mi sympatickej.",
+    "Jsi jako teplé bahno. Nepříjemné, ale vlastně uklidňující.",
+    "Jsi světlo v bažině. Slabé, ale je tam."
+]
+
+# Nadávky
 roasts = [
-    # Kategorie 1 – bažina
     "smrdíš jak mokrá bažina.",
     "vypadáš jak plesnivá cibule.",
     "jsi jak bahno po dešti-smrdíš.",
@@ -94,9 +107,6 @@ roasts = [
     "jsi jak šlem z bažiny.",
     "máš mozek jak mokrá houba.",
     "jsi jak plesnivý mech na kameni.",
-
-
-    # Kategorie 5 – jednoslovné
     "smraďochu.",
     "cibulo.",
     "trole.",
@@ -131,8 +141,7 @@ last_role_reply = {
     "Lord Farquaad": 0
 }
 
-ROLE_COOLDOWN = 7200  # 2 hodiny
-
+ROLE_COOLDOWN = 7200
 last_auto_ai = 0
 AUTO_AI_COOLDOWN = 5
 
@@ -210,7 +219,7 @@ async def on_message(message):
     now = time.time()
     msg = message.content.lower()
 
-    # 1) ROLE REAKCE (per-role cooldown)
+    # 1) ROLE REAKCE
     for role in message.author.roles:
         if role.name in role_replies:
             if now - last_role_reply[role.name] > ROLE_COOLDOWN:
@@ -225,18 +234,24 @@ async def on_message(message):
         laughs = ["lol", "haha", "lmao", "xd"]
         negatives = ["ne", "nikdy", "rozhodně ne", "ani náhodou"]
 
+        async def send_ai_reply():
+            if random.random() < 0.20:
+                await message.channel.send(random.choice(nice_answers))
+            else:
+                await message.channel.send(random.choice(ai_answers))
+
         if any(g in msg for g in greetings):
-            await message.channel.send(random.choice(ai_answers))
+            await send_ai_reply()
             last_auto_ai = now
             return
 
         if any(l in msg for l in laughs):
-            await message.channel.send(random.choice(ai_answers))
+            await send_ai_reply()
             last_auto_ai = now
             return
 
         if any(n in msg for n in negatives):
-            await message.channel.send(random.choice(ai_answers))
+            await send_ai_reply()
             last_auto_ai = now
             return
 
