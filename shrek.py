@@ -1,4 +1,3 @@
-# shrek.py
 import os
 import random
 import logging
@@ -9,7 +8,6 @@ from discord import app_commands
 from dotenv import load_dotenv
 from typing import Optional
 import time
-from datetime import datetime
 
 # ====== ENV TOKEN ======
 load_dotenv()
@@ -93,6 +91,20 @@ roasts = [
     "máš mozek jak mokrá houba.",
     "jsi jak plesnivý mech na kameni.",
     "smraďochu."
+]
+
+# ====== NOVÉ ODPOVĚDI NA SLOVO "SHREK" ======
+shrek_name_replies = [
+    "🧅 Někdo mě volal? Doufám, že to stálo za to.",
+    "💚 Co je? Shrek je zaneprázdněnej… ale dobře, poslouchám.",
+    "😡 Kdo to zase řval moje jméno?!",
+    "👂 Slyšel jsem 'Shrek'? To bude zase nějaká blbost.",
+    "🏞️ Bažina šeptá… a říká, že mě někdo hledá.",
+    "🐴 Osel mě volal? Nebo někdo normální?",
+    "🧅 Shrek je tu. Co chceš, člověče?",
+    "😏 Řekl někdo Shrek? To zní jako problém.",
+    "💨 Když řekneš Shrek, bažina se probudí.",
+    "👀 Někdo mě zmínil? Doufám, že lichotivě."
 ]
 
 role_replies = {
@@ -225,8 +237,9 @@ async def on_message(message):
             last_auto_ai = now
             return
 
+        # ====== NOVÉ REAKCE NA "SHREK" ======
         if "shrek" in msg:
-            await message.channel.send("🧅 Někdo mě volal z bažiny?")
+            await message.channel.send(random.choice(shrek_name_replies))
             last_auto_ai = now
             return
 
