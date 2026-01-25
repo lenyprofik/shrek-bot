@@ -150,7 +150,7 @@ AUTO_AI_COOLDOWN = 5
 # ====== READY ======
 @bot.event
 async def on_ready():
-    await init_db()  # ← připojení k databázi
+    await init_db()  # připojení k databázi + vytvoření tabulky
 
     try:
         await tree.sync()
