@@ -63,7 +63,7 @@ ai_answers = [
     "Tohle řekl někdo, kdo spadl do bahna po hlavě.",
     "Osle by to řekl líp. A to je co říct.",
     "Máš charisma mokré ponožky.",
-    "Mluv dál… aspoň se bažina směje.",
+    "Mluv dál… aspoň se bažina zasměje.",
     "Ty nejsi cibule. Ty jsi brambora.",
     "Když přemýšlíš, slyším šplouchání.",
     "Tohle není chyba. To je tvoje osobnost.",
@@ -82,36 +82,44 @@ ai_answers = [
     "Tohle je tak špatné, že tě pošlu zpátky do bažiny na restart."
 ]
 
-# Drsné roasty
+# Nadávky kategorie 1, 4, 5 (bez puchu, hniloby, špindíry, zmetku)
 roasts = [
-    "je jak rozlitá cibulová polévka.",
-    "má osobnost mokrého kamene.",
-    "by prohrál i s Oslem v šachu.",
-    "má charisma plesnivé houby.",
-    "je legenda… v bažině trapnosti.",
-    "má mozek jak mokrá houba po týdnu v bažině.",
-    "vypadá, jako kdyby ho Osel učil žít.",
-    "má styl jak rozšlapaná cibule.",
-    "je tak slabý, že by ho porazila i Fiona po ránu.",
-    "má ego větší než Farquaadův hrad, ale skill menší než Oslova trpělivost.",
-    "je tak zbytečný, že by ho ani drak nesežral.",
-    "má charisma jako mokrý mech na kameni.",
-    "je tak pomalý, že by ho předběhla i bažina."
+    # Kategorie 1 – bažina
+    "smrdíš jak mokrá bažina.",
+    "vypadáš jak plesnivá cibule.",
+    "jsi jak bahno po dešti-smrdíš.",
+    "smrdíš víc než Osel po běhu.",
+    "vypadáš jak cibule po týdnu v bahně.",
+    "jsi jak žumpa na slunci.",
+    "jsi jak šlem z bažiny.",
+    "máš mozek jak mokrá houba.",
+    "jsi jak plesnivý mech na kameni.",
+
+
+    # Kategorie 5 – jednoslovné
+    "smraďochu.",
+    "cibulo.",
+    "trole.",
+    "bahňáku.",
+    "žumpo.",
+    "šlemáku.",
+    "kundo.",
+    "jsi se učit."
 ]
 
 # Role reakce
 role_replies = {
     "Rivals Master": [
-        "Tak tohle je ten vítěz? Čekal jsem víc vrstev… i cibule má víc."
+        "Tak tohle je ten Rivals Master? Čekal jsem víc vrstev… i cibule má víc."
     ],
     "Pillars Master": [
-        "Pillars Master… no jo, ten co si myslí, že je chytřejší než Shrek. Hodně štěstí."
+        "Pillars Master… no jo, ten co si myslí, že je chytřejší než Shrek. Doufám že příště z toho pilíře spadneš"
     ],
     "Velkej Táta Shrek": [
-        "Aha, velkej šéf bažiny přišel. Konečně někdo, kdo má větší ego než Osel."
+        "Aha, velkej šéf bažiny přišel. Konečně někdo, kdo má větší IQ než Osel."
     ],
     "Lord Farquaad": [
-        "Farquaad přišel… a bažina je hned o něco krásnější."
+        "Farquaad přišel… a bažina je hned o něco krásnější.🥵"
     ]
 }
 
@@ -123,8 +131,7 @@ last_role_reply = {
     "Lord Farquaad": 0
 }
 
-ROLE_COOLDOWN = 7200 
-
+ROLE_COOLDOWN = 7200  # 2 hodiny
 
 last_auto_ai = 0
 AUTO_AI_COOLDOWN = 5
@@ -139,7 +146,6 @@ async def on_ready():
         logger.exception("Chyba při syncu: %s", e)
 
 # ====== SLASH COMMANDS ======
-
 @tree.command(name="shrek", description="Shrek řekne náhodnou hlášku")
 async def shrek(interaction: discord.Interaction):
     await interaction.response.send_message(random.choice(shrek_quotes))
@@ -161,7 +167,7 @@ async def cibule(interaction: discord.Interaction):
 @tree.command(name="nadavka", description="Shrek někoho urazí")
 async def nadavka(interaction: discord.Interaction, member: Optional[discord.Member] = None):
     if member:
-        await interaction.response.send_message(f"😈 {member.mention}, Shrek říká: Jsi jak mokrá bažina!")
+        await interaction.response.send_message(f"😈 {member.mention}, Shrek říká: {random.choice(roasts)}")
     else:
         await interaction.response.send_message("😈 Koho mám urazit, ty cibulo?")
 
@@ -194,7 +200,6 @@ async def pomoc(interaction: discord.Interaction):
     await interaction.response.send_message(text)
 
 # ====== ON MESSAGE ======
-
 @bot.event
 async def on_message(message):
     global last_role_reply, last_auto_ai
@@ -203,21 +208,34 @@ async def on_message(message):
         return
 
     now = time.time()
+    msg = message.content.lower()
 
-    # 1) ROLE REAKCE (pokud proběhne → konec)
-    if now - last_role_reply > ROLE_COOLDOWN:
-        for role in message.author.roles:
-            if role.name in role_replies:
+    # 1) ROLE REAKCE (per-role cooldown)
+    for role in message.author.roles:
+        if role.name in role_replies:
+            if now - last_role_reply[role.name] > ROLE_COOLDOWN:
                 await message.channel.send(random.choice(role_replies[role.name]))
-                last_role_reply = now
+                last_role_reply[role.name] = now
                 return
 
-    # 2) AUTO AI ODPOVĚĎ (pokud proběhne → konec)
+    # 2) AUTO AI ODPOVĚDI
     if now - last_auto_ai > AUTO_AI_COOLDOWN:
-        msg = message.content.lower()
 
-        triggers = ["ahoj", "jak", "proč", "lol", "ne"]
-        if any(t in msg for t in triggers):
+        greetings = ["ahoj", "čau", "cau", "zdar", "zdarec", "cus", "čus", "nazdar"]
+        laughs = ["lol", "haha", "lmao", "xd"]
+        negatives = ["ne", "nikdy", "rozhodně ne", "ani náhodou"]
+
+        if any(g in msg for g in greetings):
+            await message.channel.send(random.choice(ai_answers))
+            last_auto_ai = now
+            return
+
+        if any(l in msg for l in laughs):
+            await message.channel.send(random.choice(ai_answers))
+            last_auto_ai = now
+            return
+
+        if any(n in msg for n in negatives):
             await message.channel.send(random.choice(ai_answers))
             last_auto_ai = now
             return
@@ -227,7 +245,6 @@ async def on_message(message):
             last_auto_ai = now
             return
 
-    # 3) Zpracování příkazů
     await bot.process_commands(message)
 
 # ====== START ======
