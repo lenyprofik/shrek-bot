@@ -24,6 +24,7 @@ logger = logging.getLogger("shrek-bot")
 # ====== INTENTS ======
 intents = discord.Intents.default()
 intents.message_content = True
+intents.members = True  # 🔥 nutné pro on_member_join
 
 bot = commands.Bot(command_prefix="!", intents=intents)
 tree = bot.tree
@@ -93,20 +94,7 @@ roasts = [
     "smraďochu."
 ]
 
-# ====== NOVÉ ODPOVĚDI NA SLOVO "SHREK" ======
-shrek_name_replies = [
-    "🧅 Někdo mě volal? Doufám, že to stálo za to.",
-    "💚 Co je? Shrek je zaneprázdněnej… ale dobře, poslouchám.",
-    "😡 Kdo to zase řval moje jméno?!",
-    "👂 Slyšel jsem 'Shrek'? To bude zase nějaká blbost.",
-    "🏞️ Bažina šeptá… a říká, že mě někdo hledá.",
-    "🐴 Osel mě volal? Nebo někdo normální?",
-    "🧅 Shrek je tu. Co chceš, člověče?",
-    "😏 Řekl někdo Shrek? To zní jako problém.",
-    "💨 Když řekneš Shrek, bažina se probudí.",
-    "👀 Někdo mě zmínil? Doufám, že lichotivě."
-]
-
+# ====== ROLE REPLIES ======
 role_replies = {
     "Rivals Master": [
         "Tak tohle je ten Rivals Master? Čekal jsem víc vrstev… i cibule má víc."
@@ -119,6 +107,15 @@ role_replies = {
     ],
     "Lord Farquaad": [
         "Farquaad přišel… a bažina je hned o něco krásnější.🥵"
+    ],
+
+    # 🆕 NOVÉ ROLE
+    "Perníček": [
+        "Co tu zase drobíš, Perníčku? Jdi zpátky do trouby."
+    ],
+    "Oslík": [
+        "Osle… někdy jsi otravnej, ale bez tebe by byla bažina moc tichá.",
+        "Osle, jestli nepřestaneš mluvit, utopím tě v bahně. Z lásky."
     ]
 }
 
@@ -126,6 +123,14 @@ last_role_reply = {k: 0 for k in role_replies}
 ROLE_COOLDOWN = 7200
 last_auto_ai = 0
 AUTO_AI_COOLDOWN = 5
+
+# ====== MEMBER JOIN EVENT ======
+@bot.event
+async def on_member_join(member):
+    channel = member.guild.system_channel
+    if channel:
+        await channel.send(f"🏞️ {member.mention} vstoupil do Shrekovy bažiny!")
+        await channel.send(random.choice(swamp_events))
 
 # ====== READY ======
 @bot.event
@@ -237,9 +242,8 @@ async def on_message(message):
             last_auto_ai = now
             return
 
-        # ====== NOVÉ REAKCE NA "SHREK" ======
         if "shrek" in msg:
-            await message.channel.send(random.choice(shrek_name_replies))
+            await message.channel.send(random.choice(shrek_quotes))
             last_auto_ai = now
             return
 
