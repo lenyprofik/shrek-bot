@@ -108,8 +108,6 @@ role_replies = {
     "Lord Farquaad": [
         "Farquaad přišel… a bažina je hned o něco krásnější.🥵"
     ],
-
-    # 🆕 NOVÉ ROLE
     "Perníček": [
         "Co tu zase drobíš, Perníčku? Jdi zpátky do trouby."
     ],
@@ -119,10 +117,14 @@ role_replies = {
     ]
 }
 
-last_role_reply = {k: 0 for k in role_replies}
-ROLE_COOLDOWN = 7200
+# Cooldown pro každou roli zvlášť
+last_role_reply = {role: 0 for role in role_replies}
+ROLE_COOLDOWN = 7200  # 2 hodiny
+
+# Auto AI cooldown (pokud používáš)
 last_auto_ai = 0
 AUTO_AI_COOLDOWN = 5
+
 
 # ====== MEMBER JOIN EVENT ======
 @bot.event
@@ -131,6 +133,33 @@ async def on_member_join(member):
     if channel:
         await channel.send(f"🏞️ {member.mention} vstoupil do Shrekovy bažiny!")
         await channel.send(random.choice(swamp_events))
+
+
+# ====== ROLE REPLY HANDLER ======
+@bot.event
+async def on_message(message):
+    if message.author.bot:
+        return
+
+    now = time.time()
+
+    # Najdi všechny role uživatele, které mají definované odpovědi
+    user_roles = [role.name for role in message.author.roles if role.name in role_replies]
+
+    # Projdi role v pořadí, v jakém jsou definované v role_replies
+    for role_name in role_replies:
+        if role_name in user_roles:
+
+            # Cooldown check
+            if now - last_role_reply[role_name] >= ROLE_COOLDOWN:
+                reply = random.choice(role_replies[role_name])
+                await message.channel.send(reply)
+
+                # Ulož cooldown pro tuhle roli
+                last_role_reply[role_name] = now
+                break  # Shrek odpoví jen jednou na zprávu
+
+    await bot.process_commands(message)
 
 # ====== READY ======
 @bot.event
