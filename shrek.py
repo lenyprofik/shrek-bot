@@ -247,8 +247,8 @@ async def on_message(message):
     if now - last_auto_ai > AUTO_AI_COOLDOWN:
 
         greetings = ["ahoj", "čau", "mrdko", "cau", "zdar", "zdarec", "cus", "čus", "nazdar"]
-        laughs = ["lol", "haha", "lmao", "xd"]
-        negatives = ["ne", "nikdy", "rozhodně ne", "ani náhodou"]
+        laughs = ["lol", "haha", "zmrde", "😂", "lmao", "xd"]
+        negatives = ["ne", "vyser si oko", "kundo", "nikdy", "rozhodně ne", "ani náhodou"]
 
         async def send_ai_reply():
             if random.random() < 0.20:
