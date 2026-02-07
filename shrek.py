@@ -246,7 +246,7 @@ async def on_message(message):
     # 2) AUTO AI ODPOVĚDI
     if now - last_auto_ai > AUTO_AI_COOLDOWN:
 
-        greetings = ["ahoj", "čau", "cau", "zdar", "zdarec", "cus", "čus", "nazdar"]
+        greetings = ["ahoj", "čau", "mrdko", "cau", "zdar", "zdarec", "cus", "čus", "nazdar"]
         laughs = ["lol", "haha", "lmao", "xd"]
         negatives = ["ne", "nikdy", "rozhodně ne", "ani náhodou"]
 
